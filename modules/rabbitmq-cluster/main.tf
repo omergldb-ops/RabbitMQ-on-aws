@@ -1,6 +1,7 @@
 locals {
   admin_port = 15672
   amqp_port  = 5672
+  health_port = 8080
 }
 
 resource "aws_security_group" "alb" {
@@ -38,6 +39,13 @@ resource "aws_security_group" "nodes" {
   ingress {
     from_port       = local.amqp_port
     to_port         = local.amqp_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    from_port       = local.health_port
+    to_port         = local.health_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
@@ -82,10 +90,11 @@ resource "aws_lb_target_group" "main" {
   vpc_id      = var.vpc_id
   target_type = "instance"
   health_check {
-    path                = "/api/health"
-    port                = local.admin_port
+    # Use a lightweight, unauthenticated health endpoint on the instance so ALB health checks succeed
+    path                = "/"
+    port                = local.health_port
     protocol            = "HTTP"
-    interval            = 30
+    interval            = 10
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
@@ -162,6 +171,13 @@ resource "aws_autoscaling_group" "rabbitmq" {
     version = "$Latest"
   }
   target_group_arns = [aws_lb_target_group.main.arn]
+
+  # Ensure ASG waits for target group to be ready
+  depends_on = [
+    aws_lb_target_group.main,
+    aws_lb_listener.main
+  ]
+
   tag {
     key                 = "Name"
     value               = "rabbitmq-node"
