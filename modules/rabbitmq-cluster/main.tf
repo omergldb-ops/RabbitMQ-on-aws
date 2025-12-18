@@ -1,6 +1,6 @@
 locals {
-  admin_port = 15672
-  amqp_port  = 5672
+  admin_port  = 15672
+  amqp_port   = 5672
   health_port = 8080
 }
 
@@ -80,7 +80,7 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnets
-  tags = { Environment = var.environment }
+  tags               = { Environment = var.environment }
 }
 
 resource "aws_lb_target_group" "main" {
@@ -118,9 +118,9 @@ resource "aws_iam_role" "instance" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "ec2.amazonaws.com" }
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -188,4 +188,32 @@ resource "aws_autoscaling_group" "rabbitmq" {
     value               = var.environment
     propagate_at_launch = true
   }
+
+  # Automatically allow controlled rolling replacement of instances
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 90
+      instance_warmup        = 120
+    }
+    # Trigger when the launch template changes
+    triggers = ["launch_template"]
+  }
+}
+
+# Optional: start an immediate instance refresh via AWS CLI when requested
+resource "null_resource" "start_instance_refresh" {
+  count = var.perform_instance_refresh ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<EOT
+aws autoscaling start-instance-refresh --auto-scaling-group-name ${aws_autoscaling_group.rabbitmq.name} --preferences MinHealthyPercentage=90 --strategy Rolling
+EOT
+  }
+
+  triggers = {
+    asg_name = aws_autoscaling_group.rabbitmq.name
+  }
+
+  depends_on = [aws_autoscaling_group.rabbitmq]
 }

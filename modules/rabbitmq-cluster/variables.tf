@@ -28,3 +28,9 @@ variable "environment" {
   type    = string
   default = "rabbitmq-demo"
 }
+
+variable "perform_instance_refresh" {
+  description = "When true, trigger an immediate instance refresh (rolling replace) after apply. Requires AWS CLI on the machine running Terraform."
+  type        = bool
+  default     = false
+}

@@ -5,13 +5,13 @@ variable "aws_region" {
 }
 
 variable "rabbitmq_node_count" {
-  type        = number
-  default     = 3
+  type    = number
+  default = 3
 }
 
 variable "instance_type" {
-  type        = string
-  default     = "t3.medium"
+  type    = string
+  default = "t3.medium"
 }
 
 variable "ami_id" {
@@ -21,6 +21,12 @@ variable "ami_id" {
 }
 
 variable "environment" {
-  type        = string
-  default     = "rabbitmq-demo"
+  type    = string
+  default = "rabbitmq-demo"
+}
+
+variable "perform_instance_refresh" {
+  description = "When true, trigger an immediate instance refresh after apply. Requires AWS CLI on the machine running Terraform."
+  type        = bool
+  default     = false
 }

@@ -77,14 +77,14 @@ resource "aws_route_table_association" "public" {
 # Elastic IP for NAT
 resource "aws_eip" "nat" {
   domain = "vpc"
-  tags = { Environment = var.environment }
+  tags   = { Environment = var.environment }
 }
 
 # NAT Gateway in first public subnet
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public[0].id
-  tags = { Environment = var.environment }
+  tags          = { Environment = var.environment }
 
   depends_on = [aws_subnet.public]
 }
@@ -117,4 +117,5 @@ module "rabbitmq_cluster" {
   instance_type   = var.instance_type
   ami_id          = data.aws_ssm_parameter.amazon_linux_2.value
   environment     = var.environment
+  perform_instance_refresh = var.perform_instance_refresh
 }
