@@ -1,7 +1,4 @@
-output "rabbitmq_alb_dns" {
-  value = module.rabbitmq_cluster.alb_dns_name
-}
-
-output "rabbitmq_instance_ids" {
-  value = module.rabbitmq_cluster.instance_ids
+output "rabbitmq_management_url" {
+  description = "URL for the RabbitMQ Management Console"
+  value       = "http://${module.lb.alb_dns_name}"
 }
