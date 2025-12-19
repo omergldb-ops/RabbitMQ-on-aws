@@ -16,8 +16,7 @@ variable "instance_type" {
 
 variable "ami_id" {
   type        = string
-  description = "SSM-enabled AMI"
-  default     = "ami-068c0051b15cdb816"
+  description = "AMI id"
 }
 
 variable "environment" {
